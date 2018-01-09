@@ -1,0 +1,45 @@
+# Tomcat
+server:
+    tomcat:
+        max-threads: 1000
+        min-spare-threads: 30
+    port: 80
+
+# mysql
+spring:
+    # 环境 dev|test|pro
+    profiles:
+        active: dev
+    datasource:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driverClassName: com.mysql.jdbc.Driver
+        # jackson时间格式化
+    jackson:
+        time-zone: GMT+8
+        date-format: yyyy-MM-dd HH:mm:ss
+    thymeleaf:
+        cache: false
+    # redis配置
+    redis:
+        database: 0
+        host: 192.168.0.65
+        password: pand1314
+        port: 6379
+        timeout: 3000
+        pool:
+            max-idle: 500
+            min-idle: 50
+            max-active: 2000
+            max-wait: 1000
+#        sentinel:
+#            master: master8026
+#            nodes: 10.189.80.25:26379,10.189.80.26:26379,10.189.80.27:26378
+
+
+# Mybatis配置
+mybatis:
+    mapperLocations: classpath:mapper/*.xml
+    configLocation: classpath:mybatis.xml
+
+#logging.level.io.renren=DEBUG
+
