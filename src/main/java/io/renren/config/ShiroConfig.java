@@ -3,26 +3,19 @@ package io.renren.config;
 import io.renren.utils.shiro.StatelessAuthcFilter;
 import io.renren.utils.shiro.StatelessDefaultSubjectFactory;
 import io.renren.utils.shiro.UserRealm;
-import org.apache.shiro.mgt.*;
+import org.apache.shiro.mgt.DefaultSessionStorageEvaluator;
+import org.apache.shiro.mgt.DefaultSubjectDAO;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.mgt.DefaultSessionManager;
-import org.apache.shiro.session.mgt.SessionManager;
-import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
-import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
-import org.apache.shiro.web.mgt.DefaultWebSessionStorageEvaluator;
 import org.apache.shiro.web.mgt.DefaultWebSubjectFactory;
-import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
-import org.springframework.beans.factory.config.MethodInvokingFactoryBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.servlet.Filter;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -39,9 +32,12 @@ public class ShiroConfig {
     public ShiroFilterFactoryBean shiroFilter(SecurityManager securityManager,StatelessAuthcFilter statelessAuthcFilter){
         ShiroFilterFactoryBean factoryBean = new ShiroFilterFactoryBean();
         factoryBean.setSecurityManager(securityManager);
+        factoryBean.setLoginUrl("http://192.168.0.182/login.html");
 
         //Add.4.2.start
-        factoryBean.getFilters().put("statelessAuthc", statelessAuthcFilter);
+//        factoryBean.getFilters().put("statelessAuthc", statelessAuthcFilter);
+        factoryBean.getFilters().put("statelessAuthcFilter", statelessAuthcFilter);
+
         //拦截器.
         Map<String,String> filterMap = new LinkedHashMap<String,String>();
         filterMap.put("/public/**", "anon");
@@ -56,11 +52,12 @@ public class ShiroConfig {
         filterMap.put("/**/*.html", "anon");
         filterMap.put("/**/*.js", "anon");
         filterMap.put("/favicon.ico", "anon");
-        filterMap.put("/sys/login", "anon");
+//        filterMap.put("/sys/login", "anon");
         filterMap.put("/captcha.jpg", "anon");
         filterMap.put("/oauth/*", "anon");
         filterMap.put("/access/*", "anon");
-        filterMap.put("/**", "statelessAuthc");
+        filterMap.put("/userInfo", "anon");
+        filterMap.put("/**", "statelessAuthcFilter");
         factoryBean.setFilterChainDefinitionMap(filterMap);
         //Add.4.2.end
 

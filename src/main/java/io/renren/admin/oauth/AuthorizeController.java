@@ -1,15 +1,11 @@
 package io.renren.admin.oauth;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.renren.entity.SysUserEntity;
 import io.renren.service.SysUserService;
 import io.renren.service.oauth.ClientService;
 import io.renren.service.oauth.OAuthService;
 import io.renren.utils.Constants;
 import io.renren.utils.R;
-import io.renren.utils.ShiroUtils;
-import io.renren.utils.shiro.JwtToken;
 import org.apache.oltu.oauth2.as.issuer.MD5Generator;
 import org.apache.oltu.oauth2.as.issuer.OAuthIssuerImpl;
 import org.apache.oltu.oauth2.as.request.OAuthAuthzRequest;
@@ -22,26 +18,24 @@ import org.apache.oltu.oauth2.common.message.OAuthResponse;
 import org.apache.oltu.oauth2.common.message.types.ResponseType;
 import org.apache.oltu.oauth2.common.utils.OAuthUtils;
 import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authc.*;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.IncorrectCredentialsException;
+import org.apache.shiro.authc.LockedAccountException;
+import org.apache.shiro.authc.UnknownAccountException;
 import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.Key;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,8 +81,9 @@ public class AuthorizeController {
 
             Subject subject = SecurityUtils.getSubject();
             //如果用户没有登录，跳转到登陆页面
+            SysUserEntity sysUserEntity = null;
             if(!subject.isAuthenticated()) {
-                if(!login(subject, request)) {//登录失败时跳转到登陆页面
+                if((sysUserEntity=login(subject, request))==null) {//登录失败时跳转到登陆页面
                    /* model.addAttribute("client", clientService.findByClientId(oauthRequest.getClientId()));
                     return "oauth2login";*/
                    Map<String,Object> map=new HashMap<>();
@@ -98,7 +93,6 @@ public class AuthorizeController {
                 }
             }
 
-            SysUserEntity sysUserEntity = (SysUserEntity)subject.getPrincipal();
             //生成授权码
             String authorizationCode = null;
             //responseType目前仅支持CODE，另外还有TOKEN
@@ -154,9 +148,7 @@ public class AuthorizeController {
         }
     }
 
-    private boolean login(Subject subject, HttpServletRequest request) {
-        String jwt = request.getParameter("jwt");
-        String host = request.getRemoteHost();
+    private SysUserEntity login(Subject subject, HttpServletRequest request) {
         String username=request.getParameter("username");
         String password=request.getParameter("password");
         try{
@@ -166,10 +158,9 @@ public class AuthorizeController {
                 m.put("username", user.getUsername());
                 m.put("userId", user.getUserId());
                 m.put("phone", user.getMobile());
-                jwt=createJavaWebToken(m);
-                AuthenticationToken token = new JwtToken(jwt, host);
-                subject.login(token);
-                return true;
+                //todo
+                //验证密码是否正确
+                return user;
             }else {
                 throw new AuthenticationException();
             }
@@ -182,16 +173,6 @@ public class AuthorizeController {
         }catch (AuthenticationException e) {
             e.printStackTrace();
         }
-        return false;
-    }
-    private static String createJavaWebToken(Map<String, Object> claims) {
-        return Jwts.builder().setClaims(claims).signWith(SignatureAlgorithm.HS256, getKeyInstance()).compact();
-    }
-    private static Key getKeyInstance() {
-        //We will sign our JavaWebToken with our ApiKey secret
-        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
-        byte[] apiKeySecretBytes = DatatypeConverter.parseBase64Binary(io.renren.utils.Constants.SECRETKEY);
-        Key signingKey = new SecretKeySpec(apiKeySecretBytes, signatureAlgorithm.getJcaName());
-        return signingKey;
+        return null;
     }
 }

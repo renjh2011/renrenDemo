@@ -41,5 +41,22 @@ mybatis:
     mapperLocations: classpath:mapper/*.xml
     configLocation: classpath:mybatis.xml
 
+mapper:
+    mappers: tk.mybatis.springboot.util.MyMapper
+    not-empty: false
+    identity: MYSQL
+pagehelper:
+    helperDialect: mysql
+    reasonable: true
+    supportMethodsArguments: true
+    params: count=countSql
 #logging.level.io.renren=DEBUG
+
+oauth2:
+    client_id: c1ebe466-1cdc-4bd3-ab69-77c3561b9dee
+    client_secret: d8346ea2-6017-43ed-ad68-19c0f971738b
+    access_token_url: http://192.168.0.182/access/accessToken
+    user_info_url: http://192.168.0.182/userInfo
+    redirect_url: http://192.168.0.182:8089
+    failure_url: http://www.baidu.com
 

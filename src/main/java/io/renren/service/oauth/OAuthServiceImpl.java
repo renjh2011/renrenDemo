@@ -33,7 +33,7 @@ public class OAuthServiceImpl implements OAuthService {
 
     @Override
     public String getUsernameByAccessToken(String accessToken) {
-        return null;
+        return (String) RedisUtils.get(accessToken);
     }
 
     @Override

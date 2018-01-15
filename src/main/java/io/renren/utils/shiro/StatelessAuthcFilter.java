@@ -17,52 +17,72 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class StatelessAuthcFilter extends AccessControlFilter {
-  public static final String DEFAULT_JWT_PARAM = "token";
+//    public static final String DEFAULT_JWT_PARAM = "access_token";
+    public static final String AUTH_CODE_PARAM = "authCode";
 
- /* protected boolean isAccessAllowed(ServletRequest request, ServletResponse response, Object mappedValue){
-      return false;  
-  }*/
-  @Override
-  protected boolean isAccessAllowed(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
-    if (null != getSubject(request, response)
-            && getSubject(request, response).isAuthenticated()) {
-      return true;
+    /* protected boolean isAccessAllowed(ServletRequest request, ServletResponse response, Object mappedValue){
+         return false;
+     }*/
+    @Override
+    protected boolean isAccessAllowed(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
+        if (null != getSubject(request, response)
+                && getSubject(request, response).isAuthenticated()) {
+            return true;
+        }
+        return false;
     }
-    return false;
-  }
 
-  @Override
-  protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
-    HttpServletRequest req=(HttpServletRequest)request;
-    String uri=req.getRequestURI();
-    if(isJwtSubmission(request)){
-      AuthenticationToken token = createToken(request, response);
-      try {
+    @Override
+    protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
+        HttpServletRequest req = (HttpServletRequest) request;
+        String url = req.getRequestURL().toString();
         Subject subject = getSubject(request, response);
-        subject.login(token);
-        return true;
-      } catch (AuthenticationException e) {
-        WebUtils.toHttp(response).sendError(HttpServletResponse.SC_UNAUTHORIZED,e.getMessage());
-      }
+        if (isAccessTokenSubmission(request)) {
+            AuthenticationToken token = createOAuth2Token(request, response);
+            try {
+                subject.login(token);
+                return true;
+            } catch (AuthenticationException e) {
+                WebUtils.toHttp(response).sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+            }
+        }else{
+            String loginUrl = this.getLoginUrl() + "?redirectUrl=" + url;
+            //如果用户没有身份验证，且没有auth code，则重定向到服务端授权
+            WebUtils.issueRedirect(request, response, loginUrl);
+            //                saveRequestAndRedirectToLogin(request, response);
+            return false;
+        }
+        return false;
     }
-    return false;
-  }
-  protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) {
-    String jwt = request.getParameter(DEFAULT_JWT_PARAM);
-    String host = request.getRemoteHost();
-    System.out.println("jwt:"+jwt);
-    return new JwtToken(jwt, host);
-  }
 
-  protected boolean isJwtSubmission(ServletRequest request) {
-    String jwt = request.getParameter(DEFAULT_JWT_PARAM);
-    return (request instanceof HttpServletRequest)
-            && StringUtils.isNotBlank(jwt);
-  }
+    /*protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) {
+        String jwt = request.getParameter(DEFAULT_JWT_PARAM);
+        String host = request.getRemoteHost();
+        System.out.println("jwt:" + jwt);
+        return new JwtToken(jwt, host);
+    }*/
 
-  private void onLoginFail(ServletResponse response) throws IOException {
-    HttpServletResponse httpResponse = (HttpServletResponse) response;
-    httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);  
-    httpResponse.getWriter().write("login error");  
-  }  
+    /*protected boolean isJwtSubmission(ServletRequest request) {
+        String jwt = request.getParameter(DEFAULT_JWT_PARAM);
+        return (request instanceof HttpServletRequest)
+                && StringUtils.isNotBlank(jwt);
+    }*/
+
+    protected AuthenticationToken createOAuth2Token(ServletRequest request, ServletResponse response) {
+        String authCode = request.getParameter(AUTH_CODE_PARAM);
+        String host = request.getRemoteHost();
+        return new Oauth2Token(authCode, host);
+    }
+
+    protected boolean isAccessTokenSubmission(ServletRequest request) {
+        String accessToken = request.getParameter(AUTH_CODE_PARAM);
+        return (request instanceof HttpServletRequest)
+                && StringUtils.isNotBlank(accessToken);
+    }
+
+    private void onLoginFail(ServletResponse response) throws IOException {
+        HttpServletResponse httpResponse = (HttpServletResponse) response;
+        httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        httpResponse.getWriter().write("login error");
+    }
 }  

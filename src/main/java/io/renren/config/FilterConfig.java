@@ -37,6 +37,7 @@ public class FilterConfig {
         return registration;
     }
 
+
     @Bean
     public FilterRegistrationBean xssFilterRegistration() {
         FilterRegistrationBean registration = new FilterRegistrationBean();

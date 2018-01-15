@@ -95,6 +95,8 @@ var vm = new Vue({
 		login: function (event) {
 //			var data = "username=admin&password="+vm.password+"&captcha="+vm.captcha;
 			var data = "username=admin&password=admin";
+			var url=location.href;
+            var redirectUri=url.substring(url.lastIndexOf("=")+1,url.length);
 			$.ajax({
 				type: "POST",
 //			    url: "sys/login",
@@ -105,7 +107,34 @@ var vm = new Vue({
 				    if(result.code==302 && result.URI!=null) {
 				        var uri=result.URI;
                         var code=uri.substring(uri.lastIndexOf("=")+1,uri.length);
-                        var data1="client_id=c1ebe466-1cdc-4bd3-ab69-77c3561b9dee&client_secret=d8346ea2-6017-43ed-ad68-19c0f971738b&grant_type=authorization_code&code="+code+"&redirect_uri=http://www.baidu.com";
+//                        var data1="client_id=c1ebe466-1cdc-4bd3-ab69-77c3561b9dee&client_secret=d8346ea2-6017-43ed-ad68-19c0f971738b&grant_type=authorization_code&code="+code+"&redirect_uri="+redirectUri;
+//                        var URI = uri.substring(uri.indexOf("access/accessToken"),uri.length)
+                        $.ajax({
+                            type: "POST",
+                            url: redirectUri+"?authCode="+code,
+//                            data:data1,
+                            dataType: "json",
+                            success: function (result) {
+                                var url=result.url;
+                                var accessToken=result.access_token;
+                                location.href=url+"?access_token="+accessToken;
+                            }
+                        });
+                    }
+				}
+			});
+
+            /*$.ajax({
+                type: "POST",
+//			    url: "sys/login",
+                url: "http://192.168.0.182/sys/login",
+                data: data,
+                dataType: "json",
+                success: function(result){
+                    /!*if(result.code==302 && result.URI!=null) {
+                        var uri=result.URI;
+                        var code=uri.substring(uri.lastIndexOf("=")+1,uri.length);
+                        var data1="client_id=c1ebe466-1cdc-4bd3-ab69-77c3561b9dee&client_secret=d8346ea2-6017-43ed-ad68-19c0f971738b&grant_type=authorization_code&code="+code+"&redirect_uri=http://192.168.0.182:8089";
                         var URI = uri.substring(uri.indexOf("access/accessToken"),uri.length)
                         $.ajax({
                             type: "POST",
@@ -118,20 +147,20 @@ var vm = new Vue({
                                 location.href=url+"?access_token="+accessToken;
                             }
                         });
-                    }
-				    /*if(result.token!=null){
-				        sessionStorage.setItem("token",result.token);
-                    }
-					if(result.code == 0){//登录成功
-						parent.location.href ='index.html';
-					}else{
-						vm.error = true;
-						vm.errorMsg = result.msg;
-						
-						vm.refreshCode();
-					}*/
-				}
-			});
+                    }*!/
+                    if(result.token!=null){
+                     sessionStorage.setItem("token",result.token);
+                     }
+                     if(result.code == 0){//登录成功
+                     parent.location.href ='index.html';
+                     }else{
+                     vm.error = true;
+                     vm.errorMsg = result.msg;
+
+                     vm.refreshCode();
+                     }
+                }
+            });*/
 		}
 	}
 });

@@ -1,9 +1,9 @@
 package io.renren.admin.oauth;
 
 import com.alibaba.fastjson.JSONObject;
-import io.renren.service.UserService;
 import io.renren.service.oauth.OAuthService;
 import io.renren.utils.Constants;
+import io.renren.utils.R;
 import org.apache.oltu.oauth2.as.issuer.MD5Generator;
 import org.apache.oltu.oauth2.as.issuer.OAuthIssuer;
 import org.apache.oltu.oauth2.as.issuer.OAuthIssuerImpl;
@@ -17,20 +17,16 @@ import org.apache.oltu.oauth2.common.message.OAuthResponse;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -40,17 +36,14 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/access")
-@ResponseBody
 public class AccessTokenController {
 
     @Autowired
     private OAuthService oAuthService;
 
-    @Autowired
-    private UserService userService;
-
-    @RequestMapping("/accessToken")
-    public HttpEntity token(HttpServletRequest request,HttpServletResponse response1)
+    @PostMapping("/accessToken")
+//    @ResponseBody
+    public HttpEntity token(HttpServletRequest request, HttpServletResponse response1)
             throws URISyntaxException, OAuthSystemException {
 
         try {
@@ -64,6 +57,7 @@ public class AccessTokenController {
                                 .setError(OAuthError.TokenResponse.INVALID_CLIENT)
                                 .setErrorDescription(Constants.INVALID_CLIENT_DESCRIPTION)
                                 .buildJSONMessage();
+//                return R.error(response.getResponseStatus(),response.getBody());
                 return new ResponseEntity(response.getBody(), HttpStatus.valueOf(response.getResponseStatus()));
             }
 
@@ -74,6 +68,7 @@ public class AccessTokenController {
                                 .setError(OAuthError.TokenResponse.UNAUTHORIZED_CLIENT)
                                 .setErrorDescription(Constants.INVALID_CLIENT_DESCRIPTION)
                                 .buildJSONMessage();
+//                return R.error(response.getResponseStatus(),response.getBody());
                 return new ResponseEntity(response.getBody(), HttpStatus.valueOf(response.getResponseStatus()));
             }
 
@@ -86,6 +81,7 @@ public class AccessTokenController {
                             .setError(OAuthError.TokenResponse.INVALID_GRANT)
                             .setErrorDescription("错误的授权码")
                             .buildJSONMessage();
+//                    return R.error(response.getResponseStatus(),response.getBody());
                     return new ResponseEntity(response.getBody(), HttpStatus.valueOf(response.getResponseStatus()));
                 }
             }
@@ -107,12 +103,15 @@ public class AccessTokenController {
                     .buildJSONMessage();
 
             //根据OAuthResponse生成ResponseEntity
+            Map map=JSONObject.parseObject(response.getBody(), Map.class);
+//            return R.ok(map);
             return new ResponseEntity(response.getBody(),HttpStatus.valueOf(response.getResponseStatus()));
 
         } catch (OAuthProblemException e) {
             //构建错误响应
             OAuthResponse res = OAuthASResponse.errorResponse(HttpServletResponse.SC_BAD_REQUEST).error(e)
                     .buildJSONMessage();
+//            return R.error(res.getResponseStatus(),res.getBody());
             return new ResponseEntity(res.getBody(), HttpStatus.valueOf(res.getResponseStatus()));
         }
     }
