@@ -109,17 +109,16 @@ var vm = new Vue({
                         var code=uri.substring(uri.lastIndexOf("=")+1,uri.length);
 //                        var data1="client_id=c1ebe466-1cdc-4bd3-ab69-77c3561b9dee&client_secret=d8346ea2-6017-43ed-ad68-19c0f971738b&grant_type=authorization_code&code="+code+"&redirect_uri="+redirectUri;
 //                        var URI = uri.substring(uri.indexOf("access/accessToken"),uri.length)
-                        $.ajax({
+                        location.href=redirectUri+"?authCode="+code;
+                        /*$.ajax({
                             type: "POST",
                             url: redirectUri+"?authCode="+code,
 //                            data:data1,
                             dataType: "json",
                             success: function (result) {
-                                var url=result.url;
-                                var accessToken=result.access_token;
-                                location.href=url+"?access_token="+accessToken;
+
                             }
-                        });
+                        });*/
                     }
 				}
 			});

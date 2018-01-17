@@ -121,8 +121,10 @@ public class UserRealm extends AuthorizingRealm {
 		String accessToken = (String) oauth2Token.getPrincipal();
 		String code = oauth2Token.getAuthCode(); //获取 auth code
 		String username = extractUsername(code); // 提取用户名
+
+		SysUserEntity userEntity=sysUserService.queryByUserName(username);
 		SimpleAuthenticationInfo authenticationInfo =
-				new SimpleAuthenticationInfo(username, code, getName());
+				new SimpleAuthenticationInfo(userEntity, code, getName());
 		return authenticationInfo;
 	}
 

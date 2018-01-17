@@ -21,7 +21,7 @@ public class Oauth2Token implements AuthenticationToken {
 
     @Override
     public Object getCredentials() {
-        return Boolean.TRUE;
+        return this.authCode;
     }
 
     public String getHost() {
